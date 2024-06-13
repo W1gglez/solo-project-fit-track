@@ -19,9 +19,9 @@ if (process.env.DATABASE_URL) {
 // also running on our computer (localhost)
 else {
     pool = new pg.Pool({
-        host: 'localhost',
-        port: 5432,
-        database: 'auth_shelf', 
+      host: 'localhost',
+      port: 5432,
+      database: 'fit_track',
     });
 }
 
