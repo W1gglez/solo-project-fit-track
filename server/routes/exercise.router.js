@@ -10,12 +10,7 @@ router.get('/bymusclegroup', async (req, res) => {
   // Validate and get query parameters
   const searchQuery = req.query.search;
   const page = parseInt(req.query.page, 10) || 1;
-  const pageSize = parseInt(req.query.pageSize, 10) || 25;
-
-  // Ensure page and pageSize are positive numbers
-  if (page < 1 || pageSize < 1) {
-    return res.status(400).send('Invalid page or pageSize');
-  }
+  const pageSize = 25;
 
   const query = `
     SELECT exercises.id, "exercises"."name" as exercise_name, STRING_AGG("musclegroups"."name", ', ') as musclegroup_name 
@@ -44,19 +39,13 @@ router.get('/', async (req, res) => {
   // Validate and get query parameters
   const searchQuery = req.query.search || '';
   const page = parseInt(req.query.page, 10) || 1;
-  const pageSize = parseInt(req.query.pageSize, 10) || 25;
 
-  // Ensure page and pageSize are positive numbers
-  if (page < 1 || pageSize < 1) {
-    return res.status(400).send('Invalid page or pageSize');
-  }
-
-  const query = `SELECT * FROM exercises WHERE name ILIKE $1 LIMIT $2 OFFSET $3;`;
+  const query = `SELECT exercises.id, exercises.name FROM exercises WHERE name ILIKE $1 ORDER BY id LIMIT 25 OFFSET $2 ;`;
   const searchTerm = `%${searchQuery}%`;
-  const offset = (page - 1) * pageSize;
+  const offset = (page - 1) * 25;
 
   try {
-    const result = await pool.query(query, [searchTerm, pageSize, offset]);
+    const result = await pool.query(query, [searchTerm, offset]);
     res.send(result.rows);
   } catch (err) {
     console.error('Error processing GET exercises', err);
@@ -64,6 +53,8 @@ router.get('/', async (req, res) => {
   }
 });
 
+
+//Given an exercise id returns all fields for that exercise
 router.get('/details/:id', async (req, res) => {
   const query = 'SELECT * FROM exercises WHERE id=$1;';
   try {
