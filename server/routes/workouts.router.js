@@ -25,7 +25,7 @@ router.get('/', rejectUnauthenticated, async (req, res) => {
     const date = req.query.date || new Date().toLocaleDateString();
 
     const result = await pool.query(query, [req.user.id, date]);
-    res.send(result.rows).status(200);
+    res.send(result.rows).status(302);
   } catch (err) {
     console.error('Error processing /GET workout', err);
     res.sendStatus(500);
@@ -88,12 +88,36 @@ router.post('/add-workout-details', rejectUnauthenticated, async (req, res) => {
   }
 });
 
-router.put('/set-info/:id', rejectUnauthenticated, (req, res) => {
+router.put('/update-set/:id', rejectUnauthenticated, async (req, res) => {
   //Route for updating set_info
+  const { reps, weight } = req.body;
+  try {
+    const query = 'UPDATE set_info SET reps=$2, weight=$3 WHERE id=$1;';
+    await pool.query(query, [req.params.id, reps, weight]);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('Error processing PUT /update-set:', err);
+    res.sendStatus(500);
+  }
 });
 
-router.delete('/remove-excercise/:id', rejectUnauthenticated, (req, res) => {
-  //Route for removing exercise from workout
-});
+router.delete(
+  '/remove-exercise/:id',
+  rejectUnauthenticated,
+  async (req, res) => {
+    //Route for removing exercise from workout
+    try {
+      const query = 'DELETE FROM workout_details WHERE id=$1';
+      await pool.query(query, [req.params.id]);
+      res.send('Exercise removed from workout').status(200);
+    } catch (err) {
+      console.error(
+        `Error processing DELETE /remove-exercise/${req.params.id}:`,
+        err
+      );
+      res.sendStatus(500);
+    }
+  }
+);
 
 module.exports = router;
