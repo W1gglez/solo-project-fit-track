@@ -1,8 +1,3 @@
--- Database Name: fit_track
--- USER is a reserved keyword with Postgres
--- You must use double quotes in every query that user is in:
--- ex. SELECT * FROM "user";
--- Otherwise you will have errors!
 CREATE TABLE IF NOT EXISTS "user" (
 	"id" serial primary key,
 	 "username" varChar(80) not null UNIQUE,
@@ -11,14 +6,15 @@ CREATE TABLE IF NOT EXISTS "user" (
 );
 
 CREATE TABLE IF NOT EXISTS "user_info" (
-	"id" serial primary key,
-	"user_id" int references "user" not null unique,
-	"height" int not null,
-	"weight" int not null, 
-	"age" int not null,
-	"gender" varchar(10) not null,
-	CHECK("gender" IN ('Male', 'Female')),
-	"bmr" int not null
+	"id" serial PRIMARY KEY,
+    "user_id" int UNIQUE,
+    "height" int NOT NULL,
+    "weight" int NOT NULL,
+    "age" int NOT NULL,
+    "gender" varchar(10) NOT NULL,
+    CHECK("gender" IN ('Male', 'Female')),
+    "bmr" int NOT NULL,
+    FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE
 	
 );
 
@@ -27,48 +23,54 @@ CREATE TABLE IF NOT EXISTS "musclegroups" (
 	"name" varchar(100) not null unique
 );
 
-CREATE TABLE IF NOT EXISTS "workout_log"(
-	"id" serial primary key,
-	"user_id" int references "user" not null,
-	"date" DATE not null
+CREATE TABLE IF NOT EXISTS "exercise_muscles" (
+    "exercise_id" INT REFERENCES "exercises",
+    "muscle_id" INT REFERENCES "musclegroups",
+    PRIMARY KEY ("exercise_id", "muscle_id")
 );
 
 CREATE TABLE IF NOT EXISTS  "exercises"(
 	"id" serial primary key,
 	"name" varchar(100) not null unique,
-	--"musclegroup_id" int references "musclegroups" not null,
 	"steps" varchar(2500) not null,
 	"image_url" varchar(1000),
 	"video_url" varchar(1000)
 );
 
-CREATE TABLE IF NOT EXISTS "workout_details"(
+CREATE TABLE IF NOT EXISTS "workout_log"(
 	"id" serial primary key,
-	"workout_id" int references "workout_log" not null,
-	"exercise_id" int references "exercises" not null,
-	"sets" int not null,
-	"reps" int not null,
-	"weight" int not null
-	
+	"user_id" int references "user" ON DELETE CASCADE,
+	"date" DATE not null
 );
 
-CREATE TABLE IF NOT EXISTS "calorie_tracker"(
+CREATE TABLE IF NOT EXISTS "workout_details"(
 	"id" serial primary key,
-	"users_id" int references "user" not null,
-	"date" DATE not null,
+	"workout_id" int references "workout_log" ON DELETE CASCADE,
+	"exercise_id" int references "exercises" 
+);
+
+CREATE TABLE IF NOT EXISTS "set_info" (
+    "id" SERIAL PRIMARY KEY,
+    "detail_id" INT REFERENCES "workout_details" ON DELETE CASCADE,
+    "set_number" INT NOT NULL,
+    "reps" INT NOT NULL,
+    "weight" DECIMAL NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS "calorie_log"(
+	"id" serial primary key,
+	"user_id" int references "user" ON DELETE CASCADE,
+	"date" DATE not null
+);
+
+CREATE TABLE IF NOT EXISTS "cl_entry"(
+	"entry_id" serial primary key,
+	"log_id" int references "calorie_log" ON DELETE CASCADE,
 	"food_name" varchar(100) not null,
-	"serving_size" int ,
+	"serving_size" varchar(25),
 	"calories" int not null,
 	"protein" int,
 	"carbs" int,
 	"fats" int
 );
-
-CREATE TABLE IF NOT EXISTS "exercise_muscles" (
-    "exercise_id" INT,
-    "muscle_id" INT,
-    PRIMARY KEY ("exercise_id", "muscle_id"),
-    FOREIGN KEY ("exercise_id") REFERENCES "exercises",
-    FOREIGN KEY ("muscle_id") REFERENCES "musclegroups"
-);
-
