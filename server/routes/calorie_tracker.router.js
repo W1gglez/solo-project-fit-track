@@ -12,7 +12,6 @@ router.get('/', rejectUnauthenticated, async (req, res) => {
     const query = `SELECT cl.id as log_id, cl.date, cl.user_id, ARRAY_AGG(JSON_BUILD_OBJECT(
 'entry_id',cle.entry_id,
 'name',cle.name,
-'serving_size',cle.serving_size,
 'calories',cle.calories,
 'protein',cle.protein,
 'carbs',cle.carbs,
@@ -47,24 +46,15 @@ router.post('/add-log', rejectUnauthenticated, async (req, res) => {
 
 router.post('/add-log-entry', rejectUnauthenticated, async (req, res) => {
   const { log_id, name, calories } = req.body;
-  const serving_size = req.body.serving_size || null;
   const protein = req.body.protein || null;
   const carbs = req.body.carbs || null;
   const fats = req.body.fats || null;
 
   try {
     const query =
-      'INSERT INTO cl_entry (log_id, "name" ,serving_size, calories, protein, carbs, fats) VALUES ($1, $2, $3, $4, $5, $6, $7);';
+      'INSERT INTO cl_entry (log_id, "name" ,calories, protein, carbs, fats) VALUES ($1, $2, $3, $4, $5, $6, $7);';
 
-    await pool.query(query, [
-      log_id,
-      name,
-      serving_size,
-      calories,
-      protein,
-      carbs,
-      fats,
-    ]);
+    await pool.query(query, [log_id, name, calories, protein, carbs, fats]);
     res.sendStatus(201);
   } catch (err) {
     console.error('Error processing POST add-log-entry ', err);
@@ -74,19 +64,17 @@ router.post('/add-log-entry', rejectUnauthenticated, async (req, res) => {
 
 router.put('/update-entry/:id', rejectUnauthenticated, async (req, res) => {
   const { name, calories } = req.body;
-  const serving_size = req.body.serving_size || null;
   const protein = req.body.protein || null;
   const carbs = req.body.carbs || null;
   const fats = req.body.fats || null;
 
   try {
     const query =
-      'UPDATE cl_entry SET name=$2, serving_size=$3, calories=$4, protein=$5, carbs=$6, fats=$7 WHERE entry_id=$1';
+      'UPDATE cl_entry SET name=$2, calories=$3, protein=$4, carbs=$5, fats=$6 WHERE entry_id=$1';
 
     await pool.query(query, [
       req.params.id,
       name,
-      serving_size,
       calories,
       protein,
       carbs,
