@@ -56,7 +56,13 @@ router.get('/', async (req, res) => {
 
 //Given an exercise id returns all fields for that exercise
 router.get('/details/:id', async (req, res) => {
-  const query = 'SELECT * FROM exercises WHERE id=$1;';
+  const query = `SELECT exercises.*, ARRAY_AGG(JSON_BUILD_OBJECT(
+'step_number',steps.step_number,
+'description',steps.description
+)) as "steps"
+FROM exercises JOIN steps ON steps.exercise_id = exercises.id 
+WHERE exercises.id=$1
+GROUP BY exercises.id, exercises.name;`;
   try {
     const result = await pool.query(query, [req.params.id]);
     res.send(result.rows);
