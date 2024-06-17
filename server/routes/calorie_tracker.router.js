@@ -9,7 +9,18 @@ const {
 router.get('/', rejectUnauthenticated, async (req, res) => {
   // GET route code here
   try {
-    const query = `SELECT cle.* FROM calorie_log cl JOIN cl_entry cle ON cl.id = cle.log_id WHERE user_id=$1 AND date=$2;`;
+    const query = `SELECT cl.id as log_id, cl.date, cl.user_id, ARRAY_AGG(JSON_BUILD_OBJECT(
+'entry_id',cle.entry_id,
+'name',cle.name,
+'serving_size',cle.serving_size,
+'calories',cle.calories,
+'protein',cle.protein,
+'carbs',cle.carbs,
+'fats',cle.fats
+)) as log_entrys 
+FROM calorie_log cl JOIN cl_entry cle ON cl.id = cle.log_id 
+WHERE user_id=$1 AND date=$2
+GROUP BY cl.id, cl.date, cl.user_id;`;
     const date = req.query.date || new Date().toLocaleDateString();
 
     const result = await pool.query(query, [req.user.id, date]);
